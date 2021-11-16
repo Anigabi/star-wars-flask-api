@@ -76,7 +76,7 @@ class PlanetDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     climate = db.Column(db.String(120), unique=False, nullable=False)
-    gravity = db.Column(db.Float(80), unique=False, nullable=False)
+    gravity = db.Column(db.Float, unique=False, nullable=False)
     diameter = db.Column(db.Float, unique=False, nullable=False)
     terrain = db.Column(db.String(80), unique=False, nullable=False)
     orbitalperiod = db.Column(db.Integer, unique=False, nullable=False)
