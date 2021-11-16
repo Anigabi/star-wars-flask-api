@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Planet , PlanetDetails, PeopleDetails, People
+from models import db, Planet , PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
 #from models import Person
 
 app = Flask(__name__)
@@ -30,15 +30,36 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/People', methods=['GET'])
-def get_all_people():
-    peoples = People.get_all()
+@app.route('/starships', methods=['GET'])
+def get_starships():
+    starships = Starship.get_all_starships()
+    all_starships = [starship.to_dict() for starship in starships]
+    return jsonify(all_starships), 200
 
-    if peoples: 
-        all_People = [peoples.to_dict() for peoples in people]
-        return jsonify(all_People), 200
+@app.route('/starships/<int:id>', methods=['GET'])
+def get_starship_by_id(id):
+    starship = Starship.get_by_id_starship(id)
+    
+    if starship:
+        return jsonify(starship.to_dict()), 200
+    
+    return jsonify({'error': 'Starship not found'}), 404
 
-    return jsonify({'error':'People not found'}), 200
+@app.route('/starshipsdetails', methods=['GET'])
+def get_starshipsdetails():
+    starshipsdetails = StarshipsDetails.get_all_starshipdetails()
+    all_starshipsdetails = [starshipdetails.to_dict() for starshipdetails in starshipsdetails]
+    return jsonify(all_starshipsdetails), 200
+
+@app.route('/starshipsdetails/<int:id>', methods=['GET'])
+def get_starshipdetails_by_id(id):
+    starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
+    
+    if starshipdetails:
+        return jsonify(starshipdetails.to_dict()), 200
+    
+    return jsonify({'error': 'Starship not found'}), 404
+
 
 @app.route('/planets', methods=['GET'])
 def get_planet():
@@ -67,8 +88,6 @@ def create_planet(id):
 @app.route('/planets/details', methods=['POST'])
 def create_detailsplanet():
     
-    
-
     name=request.json.get('name',None)
     climate=request.json.get('climate',None)
     gravity=request.json.get('gravity',None)
@@ -84,17 +103,17 @@ def create_detailsplanet():
     return jsonify({'error':'Missing info'}), 404
 
 
-   
-        
-        
-        
+@app.route('/People', methods=['GET'])
+def get_all_people():
+    peoples = People.get_all()
 
-    
+    if peoples: 
+        all_People = [peoples.to_dict() for peoples in people]
+        return jsonify(all_People), 200
+
+    return jsonify({'error':'People not found'}), 200
     
 
-    
-
-# this only runs if `$ python src/main.py` is executed
 @app.route('/People/<int:id>', methods=['GET'])
 def get_people(id): 
     people = People.get_by_id(id)
