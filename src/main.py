@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, StarshipsDetails, Starship
 #from models import Person
 
 app = Flask(__name__)
@@ -30,14 +30,35 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/starships', methods=['GET'])
+def get_starships():
+    starships = Starship.get_all_starships()
+    all_starships = [starship.to_dict() for starship in starships]
+    return jsonify(all_starships), 200
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/starships/<int:id>', methods=['GET'])
+def get_starship_by_id(id):
+    starship = Starship.get_by_id_starship(id)
+    
+    if starship:
+        return jsonify(starship.to_dict()), 200
+    
+    return jsonify({'error': 'Starship not found'}), 404
 
-    return jsonify(response_body), 200
+@app.route('/starshipsdetails', methods=['GET'])
+def get_starshipsdetails():
+    starshipsdetails = StarshipsDetails.get_all_starshipdetails()
+    all_starshipsdetails = [starshipdetails.to_dict() for starshipdetails in starshipsdetails]
+    return jsonify(all_starshipsdetails), 200
+
+@app.route('/starshipsdetails/<int:id>', methods=['GET'])
+def get_starshipdetails_by_id(id):
+    starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
+    
+    if starshipdetails:
+        return jsonify(starshipdetails.to_dict()), 200
+    
+    return jsonify({'error': 'Starship not found'}), 404
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
