@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, PeopleDetails
+from models import db, PeopleDetails, People
 #from models import Person
 
 app = Flask(__name__)
@@ -32,17 +32,17 @@ def sitemap():
 
 @app.route('/People', methods=['GET'])
 def get_all_people():
-    peoples = People.get_all()
+    peoples = People.get_all_people()
 
     if peoples: 
-        all_People = [peoples.to_dict() for peoples in people]
+        all_People = [people.to_dict() for people in peoples]
         return jsonify(all_People), 200
 
     return jsonify({'error':'People not found'}), 200
 
 @app.route('/People/<int:id>', methods=['GET'])
-def get_people(id): 
-    people = People.get_by_id(id)
+def get_people_by_id(id): 
+    people = People.get_by_id_people(id)
     
     if people: 
         return jsonify(people.to_dict()), 200
@@ -54,17 +54,17 @@ def get_all_details():
     details = PeopleDetails.get_all_details()
 
     if details: 
-        all_details = [details.to_dict() for details in details]
+        all_details = [details.to_dict_details() for details in details]
         return jsonify(all_details), 200 
 
     return jsonify({'error': 'Details not found'}), 200
 
 @app.route('/PeopleDtails/<int:id>', methods=['GET'])
-def create_all_details():
-    create_details = PeopleDetails.get_by_id(id)
+def create_all_details_by_id():
+    create_details = PeopleDetails.get_by_id_cceate_all_details(id)
 
     if create_details: 
-        return jsonify(create_details.to_dict()), 200
+        return jsonify(create_details.to_dict_details()), 200
     
     return jsonify({'error': 'Details not found'})
 
@@ -72,3 +72,6 @@ def create_all_details():
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
+
+
+
