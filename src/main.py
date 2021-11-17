@@ -8,13 +8,16 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Planet , PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
-#from models import Person
+from models import db, User,Planet, PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["JWT_SECRET_KEY"] = os.environ.get('JWI_KEY')
+jwt = JWTManager(app)
+
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
@@ -29,6 +32,33 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+
+    if email and password:
+        user = User.get_by_email(email)
+
+        if user:
+            '''check password'''
+            access_token = create_access_token(identity=user.user_to_dict(), time=timedelta(hours=12))
+            print(access_token)
+            return jsonify({'token':access_token}), 200
+
+        return jsonify({"msg": "Bad username or password"}), 401
+
+
+@app.route('/user/<int:id>/favourite', methods=['GET'])
+@jwt_required()
+def get_fav(id):
+    token_id = get_jwt_identity()
+
+    if token_id == id:
+        '''return favs'''
+    return jsonify(user.to_dict()), 200
+
 
 @app.route('/starships', methods=['GET'])
 def get_starships():

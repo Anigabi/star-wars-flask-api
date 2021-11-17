@@ -1,7 +1,29 @@
 from flask_sqlalchemy import SQLAlchemy
-# from sqlalchemy.orm import relationship
+
 
 db = SQLAlchemy()
+
+class User(db.Model):
+    __tablename__: "user"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=False, nullable=False)
+    _password = db.Column(db.String(120), unique=False, nullable=False)
+    _is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+
+    def __repr__(self):
+        return f'User {self.email}, id: {self.id}' 
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+        }
+
+    @classmethod
+    def get_by_email(cls,email):
+        user = cls.query.filter_by(email=email).one_or_none()
+        return user
 
 class StarshipsDetails(db.Model):
     __tablename__: "starships_details"
@@ -65,14 +87,9 @@ class Starship(db.Model):
         starship = cls.query.filter(id=id_starship).one_or_none()
         return starship
     
-
-
-    
-
-
   
 class PlanetDetails(db.Model):
-    __tablename__:"planet_details"
+    __tablename__: "planet_details"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     climate = db.Column(db.String(120), unique=False, nullable=False)
@@ -88,11 +105,11 @@ class PlanetDetails(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "climate":self.climate,
-            "gravity":self.gravity,
-            "diameter":self.diameter,
-            "terrain":self.terrain,
-            "orbitalperiod":self.orbitalperiod
+            "climate": self.climate,
+            "gravity": self.gravity,
+            "diameter": self.diameter,
+            "terrain": self.terrain,
+            "orbitalperiod": self.orbitalperiod
         }
     
     def create(self):
@@ -101,7 +118,7 @@ class PlanetDetails(db.Model):
         return self
 
 class Planet(db.Model):
-    __tablename__:"planet"
+    __tablename__: "planet"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     planet_id= db.Column(db.Integer, db.ForeignKey("planet_details.id"), nullable=False)
@@ -113,7 +130,6 @@ class Planet(db.Model):
         return {
             "id": self.id,
             "name": self.name
-            # do not serialize the password, its a security breach
         }
     
     def create(self):
@@ -133,9 +149,9 @@ class Planet(db.Model):
 
 
 
-    
 class PeopleDetails(db.Model):
-    __tablename__:"people_details"
+
+    __tablename__: "people_details"
     id  = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
     heigth = db.Column(db.DECIMAL, unique=False, nullable=False)
@@ -143,12 +159,11 @@ class PeopleDetails(db.Model):
     hairColor = db.Column(db.String(250), unique=False, nullable=False)
     eyeColor = db.Column(db.String(250), unique=False, nullable=False)
     homeworld = db.Column(db.String(250), unique=False, nullable=False)
-
-    detail_has_character = db.relationship('People', back_populates='people_has_details')
-
+    detail_has_character = db.relationship("People", back_populates="people_has_details")
+    
     def __repr__(self):
         return f'PeopleDetails is {self.name}, heigth: {self.heigth}, mass: {self.mass}, hairColor: {self.hariColor}, eyeColor: {self.eyeColor}, homeworld: {self.homeworld}'
-
+    
     def to_dict(self):
         return  {
             "id": self.id,
@@ -160,47 +175,42 @@ class PeopleDetails(db.Model):
             "homeworld": self.homeworld
         }
 
-    @classmethod 
+    @classmethod
     def get_all(cls):
         all_details = cls.query.all()
         return  all_details
-    
-    @classmethod 
-    def get_by_id(cls, id): 
+
+    @classmethod
+    def get_by_id(cls, id):
         create_details = cls.query.get(id)
         return create_details
-
 
 class People(db.Model):
     __tablename__: "people"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
     detail_id = db.Column(db.Integer, db.ForeignKey("people_details.id"), nullable=False)
-
+    
     people_has_details = db.relationship("PeopleDetails", back_populates="detail_has_character")
     
-
     def __repr__(self):
         return f'People is {self.name}, id : {self.id}'
 
-    def to_dict(self):        
-        
-        return {          
-              "id": self.id,          
-              "name": self.name,  
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
             }
 
-    @classmethod 
+    @classmethod
     def get_all(cls):
         all_people = cls.query.all()
         return all_people
     
-    
-    @classmethod 
-    def get_by_id(cls, id): 
+    @classmethod
+    def get_by_id(cls, id):
         character = cls.query.get(id)
         return character
-
     
             
 
