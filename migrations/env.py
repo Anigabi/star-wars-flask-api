@@ -52,7 +52,11 @@ def run_migrations_offline():
 
     with context.begin_transaction():
         context.run_migrations()
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> c0b268915ec9cba9b3a27cce55cf41a66d5ef91b
 
 def run_migrations_online():
     """Run migrations in 'online' mode.
