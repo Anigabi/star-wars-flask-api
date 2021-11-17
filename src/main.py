@@ -75,58 +75,14 @@ def get_starship_by_id(id):
     
     return jsonify({'error': 'Starship not found'}), 404
 
+
+
 @app.route('/starshipsdetails', methods=['GET'])
 def get_starshipsdetails():
     starshipsdetails = StarshipsDetails.get_all_starshipdetails()
     all_starshipsdetails = [starshipdetails.to_dict() for starshipdetails in starshipsdetails]
     return jsonify(all_starshipsdetails), 200
 
-@app.route('/starshipsdetails/<int:id>', methods=['GET'])
-def get_starshipdetails_by_id(id):
-    starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
-    
-    if starshipdetails:
-        return jsonify(starshipdetails.to_dict()), 200
-    
-    return jsonify({'error': 'Starship not found'}), 404
-
-
-@app.route('/planets', methods=['GET'])
-def get_planet():
-
-    planets= Planet.get_all()
-
-    if planets:
-        all_planets= [planet.to_dict() for planet in planets]
-        return jsonify(all_planets), 200
-
-    return jsonify({'error':'No planets found'})
-
-
-@app.route('/planets/<int:id>', methods=['POST'])
-def create_planet(id):
-    new_planet= request.json.get('planet', None)
-
-    if not new_planet:
-        return jsonify({'error':'Missing data'}), 400
-    
-    planet=Planet(name=new_planet, planet_id=id)
-
-
-@app.route('/starships/<int:id>', methods=['GET'])
-def get_starship_by_id(id):
-    starship = Starship.get_by_id_starship(id)
-    
-    if starship:
-        return jsonify(starship.to_dict()), 200
-    
-    return jsonify({'error': 'Starship not found'}), 404
-
-@app.route('/starshipsdetails', methods=['GET'])
-def get_starshipsdetails():
-    starshipsdetails = StarshipsDetails.get_all_starshipdetails()
-    all_starshipsdetails = [starshipdetails.to_dict() for starshipdetails in starshipsdetails]
-    return jsonify(all_starshipsdetails), 200
 
 @app.route('/starshipsdetails/<int:id>', methods=['GET'])
 def get_starshipdetails_by_id(id):
