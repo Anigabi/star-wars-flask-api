@@ -2,6 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
+from datetime import timedelta
 
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
@@ -10,7 +11,8 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 
 from utils import generate_sitemap
-from models import db, Planet, PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
+from models import db, User, Planet, PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
+from admin import setup_admin
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -22,11 +24,29 @@ jwt = JWTManager(app)
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
+setup_admin(app)
 
 # generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+
+    if email and password:
+        user = User.get_by_email(email)
+
+        if user:
+            '''check password'''
+            access_token = create_access_token(identity=user.to_dict(), expires_delta=timedelta(hours=12))
+            return jsonify({'token': access_token}), 200
+
+        return jsonify({'error':'Not found'}), 200
+
+    return jsonify({"msg": "Wrong username or password"}), 401
 
 
 @app.route('/starships', methods=['GET'])
