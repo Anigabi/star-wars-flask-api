@@ -32,8 +32,21 @@ def sitemap():
 @app.route('/starships', methods=['GET'])
 def get_starships():
     starships = Starship.get_all_starships()
-    all_starships = [starship.to_dict() for starship in starships]
-    return jsonify(all_starships), 200
+
+    if starships:
+        all_starships = [starship.to_dict() for starship in starships]
+        return jsonify(all_starships), 200
+    
+    return jsonify({'error':'No starships found'}), 200
+
+@app.route('/starship/<int:id>/starshipsdetails', methods=['GET'])
+def get_starshipdetails_by_id(id):
+    starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
+    
+    if starshipdetails:
+        return jsonify(starshipdetails.to_dict()), 200
+    
+    return jsonify({'error': 'Starship not found'}),
 
 
 @app.route('/planets', methods=['GET'])
