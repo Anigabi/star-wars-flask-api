@@ -34,8 +34,8 @@ class StarshipsDetails(db.Model):
         return starshipsdetails
 
     @classmethod
-    def get_by_id_starshipdetails(cls,id_starshipdetails):
-        starshipdetails = cls.query.filter(id=id_starshipdetails).one_or_none()
+    def get_by_id_starshipdetails(cls,id):
+        starshipdetails = cls.query.get(id)
         return starshipdetails
 
 
