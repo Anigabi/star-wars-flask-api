@@ -80,6 +80,17 @@ def get_planet():
 
     return jsonify({'error':'No planets found'}), 200
 
+@app.route('/planets/<int:id>/detail', methods=['GET'])
+def get_planetdetail(id):
+
+    planetdet= PlanetDetails.getby_id(id)
+
+    if planetdet:
+    
+        return jsonify(planetdet.to_dict()), 200
+
+    return jsonify({'error':'No details found'})
+
 
 @app.route('/people', methods=['GET'])
 def get_all_people():

@@ -122,6 +122,11 @@ class PlanetDetails(db.Model):
             "orbitalperiod": self.orbitalperiod
         }
     
+    @classmethod
+    def getby_id(cls,id):
+        planetdetail=cls.query.get(id)
+        return planetdetail
+    
 
 class Planet(db.Model):
     __tablename__: "planet"
