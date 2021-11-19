@@ -3,12 +3,14 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 import os
 from flask import Flask, request, jsonify, url_for
+from sqlalchemy import exc
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Planet , PlanetDetails, PeopleDetails, People, StarshipsDetails, Starship
+from models import db, Planet , PlanetDetails, User
 #from models import Person
 
 app = Flask(__name__)
@@ -20,6 +22,7 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
+
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -30,38 +33,8 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/starships', methods=['GET'])
-def get_starships():
-    starships = Starship.get_all_starships()
-    all_starships = [starship.to_dict() for starship in starships]
-    return jsonify(all_starships), 200
 
-@app.route('/starships/<int:id>', methods=['GET'])
-def get_starship_by_id(id):
-    starship = Starship.get_by_id_starship(id)
-    
-    if starship:
-        return jsonify(starship.to_dict()), 200
-    
-    return jsonify({'error': 'Starship not found'}), 404
-
-@app.route('/starshipsdetails', methods=['GET'])
-def get_starshipsdetails():
-    starshipsdetails = StarshipsDetails.get_all_starshipdetails()
-    all_starshipsdetails = [starshipdetails.to_dict() for starshipdetails in starshipsdetails]
-    return jsonify(all_starshipsdetails), 200
-
-@app.route('/starshipsdetails/<int:id>', methods=['GET'])
-def get_starshipdetails_by_id(id):
-    starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
-    
-    if starshipdetails:
-        return jsonify(starshipdetails.to_dict()), 200
-    
-    return jsonify({'error': 'Starship not found'}), 404
-
-
-@app.route('/planets', methods=['GET'])
+@app.route('/planet', methods=['GET'])
 def get_planet():
 
     planets= Planet.get_all()
@@ -70,77 +43,36 @@ def get_planet():
         all_planets= [planet.to_dict() for planet in planets]
         return jsonify(all_planets), 200
 
-    return jsonify({'error':'No planets found'})
+    return jsonify({'error':'No planets found'}), 200
 
 
-@app.route('/planets/<int:id>', methods=['POST'])
-def create_planet(id):
-    new_planet= request.json.get('planet', None)
+@app.route('/planets/<int:id>/detail', methods=['GET'])
+def get_planet_details(id):
+   
+    planet= Planet.get_byid(id)
 
-    if not new_planet:
-        return jsonify({'error':'Missing data'}), 400
+    if not planet:
+        return jsonify({'error':'Missing planet'}), 400
+      
+    return jsonify(planet.to_dict()),201
+
+
+
+def create_token():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+
+    if not (username and password):
+        return ({'error':'Missing data'}), 400
+    # Query your database for username and password
+    user = User.get_userbyemail(email)
+    if not user :
+        # the user was not found on the database
+        return jsonify({"msg": "Bad username or password"}), 401
     
-    planet=Planet(name=new_planet, planet_id=id)
-
-    planet_created= planet.create()
-    return jsonify(planet_created.to_dict()),201
-
-@app.route('/planets/details', methods=['POST'])
-def create_detailsplanet():
-    
-    name=request.json.get('name',None)
-    climate=request.json.get('climate',None)
-    gravity=request.json.get('gravity',None)
-    diameter=request.json.get('diameter',None)
-    terrain=request.json.get('terrain',None)
-    orbitalperiod=request.json.get('orbitalperiod',None)
-
-    if name:
-        details= PlanetDetails(name=name, climate= climate, gravity=gravity, diameter=diameter, terrain=terrain,orbitalperiod=orbitalperiod)
-        details.create()
-        return jsonify(details.to_dict()),201
-    
-    return jsonify({'error':'Missing info'}), 404
-
-
-@app.route('/People', methods=['GET'])
-def get_all_people():
-    peoples = People.get_all()
-
-    if peoples: 
-        all_People = [peoples.to_dict() for peoples in people]
-        return jsonify(all_People), 200
-
-    return jsonify({'error':'People not found'}), 200
-    
-
-@app.route('/People/<int:id>', methods=['GET'])
-def get_people(id): 
-    people = People.get_by_id(id)
-    
-    if people: 
-        return jsonify(people.to_dict()), 200
-
-    return jsonify({'error':'Character not found'})
-
-@app.route('/PeopleDetails', methods=['GET'])
-def get_all_details():
-    details = PeopleDetails.get_all_details()
-
-    if details: 
-        all_details = [details.to_dict() for details in details]
-        return jsonify(all_details), 200 
-
-    return jsonify({'error': 'Details not found'}), 200
-
-@app.route('/PeopleDtails/<int:id>', methods=['GET'])
-def create_all_details():
-    create_details = PeopleDetails.get_by_id(id)
-
-    if create_details: 
-        return jsonify(create_details.to_dict()), 200
-    
-    return jsonify({'error': 'Details not found'})
+    # create a new token with the user id inside
+    access_token = create_access_token(identity=user.id)
+    return jsonify({ "token": access_token, "user_id": user.id })
 
  #this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
