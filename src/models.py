@@ -232,8 +232,3 @@ class People(db.Model):
     def get_by_id_people(cls, id_people): 
         character = cls.query.get(id)
         return character
-    
-            
-
-   
-
