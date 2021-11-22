@@ -59,6 +59,8 @@ def get_all_details():
 
     return jsonify({'error': 'Details not found'}), 200
 
+
+    return jsonify("ok"), 200
 #this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
