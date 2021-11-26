@@ -21,6 +21,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["JWT_SECRET_KEY"] = os.environ.get('JWI_KEY')
 jwt = JWTManager(app)
 
+
+
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
@@ -59,6 +61,7 @@ def get_starships():
     
     return jsonify({'error':'No starships found'}), 200
 
+
 @app.route('/starship/<int:id>/starshipsdetails', methods=['GET'])
 def get_starshipdetails_by_id(id):
     starshipdetails = StarshipsDetails.get_by_id_starshipdetails(id)
@@ -67,6 +70,27 @@ def get_starshipdetails_by_id(id):
         return jsonify(starshipdetails.to_dict()), 200
     
     return jsonify({'error': 'Starship not found'}),
+
+
+@app.route('/user/<int:id_user>/favourite-starships/<int:id_starship>', methods=['POST'])
+@jwt_required()
+def add_favstarship(id_user,id_starship):
+    token_id = get_jwt_identity()
+    print("token",token_id)
+
+    if token_id.get("id") == id_user:
+        user = User.get_user_by_id(id_user)
+        starship = Starship.get_by_id_starship(id_starship)
+        print("user",user)
+        print("starship",starship)
+
+        if user and starship:
+            add_fav = user.add_fav_starship(starship)
+            print(add_fav)
+            fav_starships = [starship.to_dict() for starship in add_fav]
+            return jsonify(fav_starships), 200
+
+    return jsonify({'error': 'Starship fav not found'}), 404
 
 
 @app.route('/planets', methods=['GET'])
