@@ -8,6 +8,29 @@ starshipfavourites = db.Table('starshipfavourites',
     db.Column('starship_id', db.Integer, db.ForeignKey('starship.id'), primary_key=True)
 )
 
+class Favplanet(db.Model):
+    __tablename__="favplanet"
+    id= db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    planet_id = db.Column(db.Integer, db.ForeignKey("planet.id"), nullable=False)
+    favplanethave=db.relationship("Planet", back_populates="planet_havefav")
+    
+
+    def __repr__(self):
+        return f'The planet is {self.planet_id}'
+    
+    def to_dict(self):
+        return {
+            "id-user": self.user_id,
+            "id-planet": self.planet_id
+            # do not serialize the password, its a security breach
+        }
+    
+    def create(self):
+        db.session.add(self)
+        db.session.commit()
+        return self
+
 
 class User(db.Model):
     __tablename__: "user"
@@ -18,6 +41,7 @@ class User(db.Model):
     _is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     have_user_starship = db.relationship('Starship', secondary=starshipfavourites, back_populates="have_user_starshipfav")
+    favorites = db.relationship("Favplanet")
 
     def __repr__(self):
         return f'User {self.email}, id: {self.id}' 
@@ -155,6 +179,7 @@ class Planet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     planet_id= db.Column(db.Integer, db.ForeignKey("planet_details.id"), nullable=False)
+    planet_havefav = db.relationship("Favplanet", back_populates="favplanethave")
 
 
     def __repr__(self):

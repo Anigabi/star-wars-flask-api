@@ -115,6 +115,29 @@ def get_planetdetail(id):
 
     return jsonify({'error':'No details found'})
 
+@app.route('/fav/planet/<int:id_planet>', methods=['POST'])
+@jwt_required()
+def add_favourites(id_planet):
+    user= get_jwt_identity()
+    print(user)
+    
+    
+    planet=Planet.get_byid(id_planet)
+
+    if user and planet:
+        try:
+           fav= Favplanet(user_id=user.get("id"),planet_id=id_planet)
+           new_fav= fav.create()
+           return jsonify(new_fav.to_dict()),200
+        except Exception as error:
+            print(error)
+            return jsonify({"error":"Intern server error"}),500
+
+
+        
+    
+    return jsonify ({"error":"Not fav created"}),400
+
 
 @app.route('/people', methods=['GET'])
 def get_all_people():
