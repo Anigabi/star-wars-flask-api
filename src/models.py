@@ -3,6 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+starshipfavourites = db.Table('starshipfavourites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('starship_id', db.Integer, db.ForeignKey('starship.id'), primary_key=True)
+)
+
+
 class User(db.Model):
     __tablename__: "user"
 
@@ -11,20 +17,33 @@ class User(db.Model):
     _password = db.Column(db.String(120), unique=False, nullable=False)
     _is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
+    have_user_starship = db.relationship('Starship', secondary=starshipfavourites, back_populates="have_user_starshipfav")
+
     def __repr__(self):
         return f'User {self.email}, id: {self.id}' 
 
     def to_dict(self):
         return {
             "id": self.id,
-            "email": self.email
+            "email": self.email,
+            "starships": [starship.to_dict() for starship in self.have_user_starship]
         }
 
     @classmethod
     def get_by_email(cls,email):
         user = cls.query.filter_by(email=email).one_or_none()
         return user
+    
+    @classmethod
+    def get_user_by_id(cls,id):
+        user = cls.query.get(id)
+        return user
 
+    def add_fav_starship (self,starship):
+        self.have_user_starship.append(starship)
+        return self.have_user_starship
+
+        
 
 class StarshipsDetails(db.Model):
     __tablename__: "starships_details"
@@ -70,7 +89,7 @@ class Starship(db.Model):
     starships_id = db.Column(db.Integer, db.ForeignKey("starships_details.id"), nullable=False)    
     
     starship_have = db.relationship("StarshipsDetails", back_populates="starship_have_details")
-
+    have_user_starshipfav = db.relationship('User', secondary=starshipfavourites, back_populates="have_user_starship")
 
     def __repr__(self):
         return f'Starships is {self.name}, id: {self.id}' 
@@ -91,10 +110,12 @@ class Starship(db.Model):
 
     @classmethod
     def get_by_id_starship(cls,id_starship):
-        starship = cls.query.filter(id=id_starship).one_or_none()
+        starship = cls.query.get(id_starship)
         return starship
     
-  
+    
+
+
 class PlanetDetails(db.Model):
     __tablename__: "planet_details"
 
