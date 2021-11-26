@@ -65,6 +65,7 @@ class User(db.Model):
 
     def add_fav_starship (self,starship):
         self.have_user_starship.append(starship)
+        db.session.commit()
         return self.have_user_starship
 
         
