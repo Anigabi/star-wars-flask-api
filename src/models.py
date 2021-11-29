@@ -8,6 +8,34 @@ favouritespeople = db.Table('favouritespeople',
     db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True)
 )
 
+starshipfavourites = db.Table('starshipfavourites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('starship_id', db.Integer, db.ForeignKey('starship.id'), primary_key=True)
+)
+
+class Favplanet(db.Model):
+    __tablename__="favplanet"
+    id= db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    planet_id = db.Column(db.Integer, db.ForeignKey("planet.id"), nullable=False)
+    favplanethave=db.relationship("Planet", back_populates="planet_havefav")
+    
+
+    def __repr__(self):
+        return f'The planet is {self.planet_id}'
+    
+    def to_dict(self):
+        return {
+            "id-user": self.user_id,
+            "id-planet": self.planet_id
+            # do not serialize the password, its a security breach
+        }
+    
+    def create(self):
+        db.session.add(self)
+        db.session.commit()
+        return self
+
 
 class User(db.Model):
     __tablename__: "user"
@@ -18,6 +46,8 @@ class User(db.Model):
     _is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     have_a_user_favourite_people = db.relationship('People', secondary=favouritespeople, back_populates='have_a_favourite_people')
+    have_user_starship = db.relationship('Starship', secondary=starshipfavourites, back_populates="have_user_starshipfav")
+    favorites = db.relationship("Favplanet")
 
     def __repr__(self):
         return f'User {self.email}, id: {self.id}' 
@@ -27,12 +57,23 @@ class User(db.Model):
             "id": self.id,
             "email": self.email,
             "people": [people.to_dict() for people in self.have_a_user_favourite_people]
+            "starships": [starship.to_dict() for starship in self.have_user_starship]
         }
 
     @classmethod
     def get_by_email(cls,email):
         user = cls.query.filter_by(email=email).one_or_none()
         return user
+    
+    @classmethod
+    def get_user_by_id(cls,id):
+        user = cls.query.get(id)
+        return user
+
+    def add_fav_starship (self,starship):
+        self.have_user_starship.append(starship)
+        db.session.commit()
+        return self.have_user_starship
 
     @classmethod 
     def get_user_by_id(cls,id): 
@@ -43,6 +84,7 @@ class User(db.Model):
         self.have_a_user_favourite_people.append(people)
         return self.have_a_user_favourite_people
 
+        
 
 class StarshipsDetails(db.Model):
     __tablename__: "starships_details"
@@ -88,7 +130,7 @@ class Starship(db.Model):
     starships_id = db.Column(db.Integer, db.ForeignKey("starships_details.id"), nullable=False)    
     
     starship_have = db.relationship("StarshipsDetails", back_populates="starship_have_details")
-
+    have_user_starshipfav = db.relationship('User', secondary=starshipfavourites, back_populates="have_user_starship")
 
     def __repr__(self):
         return f'Starships is {self.name}, id: {self.id}' 
@@ -109,10 +151,12 @@ class Starship(db.Model):
 
     @classmethod
     def get_by_id_starship(cls,id_starship):
-        starship = cls.query.filter(id=id_starship).one_or_none()
+        starship = cls.query.get(id_starship)
         return starship
     
-  
+    
+
+
 class PlanetDetails(db.Model):
     __tablename__: "planet_details"
 
@@ -152,6 +196,7 @@ class Planet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     planet_id= db.Column(db.Integer, db.ForeignKey("planet_details.id"), nullable=False)
+    planet_havefav = db.relationship("Favplanet", back_populates="favplanethave")
 
 
     def __repr__(self):
