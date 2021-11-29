@@ -3,6 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+favouritespeople = db.Table('favouritespeople',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True)
+)
+
 starshipfavourites = db.Table('starshipfavourites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('starship_id', db.Integer, db.ForeignKey('starship.id'), primary_key=True)
@@ -40,6 +45,7 @@ class User(db.Model):
     _password = db.Column(db.String(120), unique=False, nullable=False)
     _is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
+    have_a_user_favourite_people = db.relationship('People', secondary=favouritespeople, back_populates='have_a_favourite_people')
     have_user_starship = db.relationship('Starship', secondary=starshipfavourites, back_populates="have_user_starshipfav")
     favorites = db.relationship("Favplanet")
 
@@ -50,6 +56,7 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
+            "people": [people.to_dict() for people in self.have_a_user_favourite_people]
             "starships": [starship.to_dict() for starship in self.have_user_starship]
         }
 
@@ -67,6 +74,15 @@ class User(db.Model):
         self.have_user_starship.append(starship)
         db.session.commit()
         return self.have_user_starship
+
+    @classmethod 
+    def get_user_by_id(cls,id): 
+        user = cls.query.get(id)
+        return user
+
+    def add_fav_people(self,people):
+        self.have_a_user_favourite_people.append(people)
+        return self.have_a_user_favourite_people
 
         
 
@@ -253,10 +269,11 @@ class People(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
-    detail_id = db.Column(db.Integer, db.ForeignKey("people_details.id"), nullable=False)
-    
+    detail_id = db.Column(db.Integer, db.ForeignKey("people_details.id"), nullable=False) 
+
     people_has_details = db.relationship("PeopleDetails", back_populates="detail_has_character")
-    
+    have_a_favourite_people = db.relationship("User", secondary=favouritespeople, back_populates="have_a_user_favourite_people")
+
 
     def __repr__(self):
         return f'People is {self.name}, id : {self.id}'
@@ -276,6 +293,8 @@ class People(db.Model):
     
 
     @classmethod 
-    def get_by_id_people(cls, id_people): 
+    def get_by_id_people(cls, id): 
         character = cls.query.get(id)
         return character
+
+   

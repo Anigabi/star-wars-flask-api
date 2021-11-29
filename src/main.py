@@ -159,6 +159,25 @@ def create_all_details():
     
     return jsonify({'error': 'Details not found'})
 
+@app.route('/user/<int:id_user>/favourite-people/<int:id_people>', methods=['POST'])
+@jwt_required
+def add_a_favourite_character(id_user,id_people):
+    token_id = get_jwt_identity()
+    print ("token",token_id)
+
+    if token_id.get("id") == id_user:
+        user = User.get_user_by_id(id_user) 
+        people = People.get_by_id_people(id_people)
+        print("user",user)
+        print ("people",people)
+
+        if user and people: 
+            add_favorite_people = user.add_fav_people(people)
+            fav_people = [people.to_dict() for people in add_favorite_people]
+            return jsonify(fav_people), 200
+
+    return jsonify({"error": "Not found fav"}), 404
+
 #this only runs if `$ python src/main.py` is executed
  #this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
